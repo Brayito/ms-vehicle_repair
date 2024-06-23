@@ -3,7 +3,7 @@ package autofix.ms_vehicle_repair.model;
 import lombok.Data;
 
 @Data
-public class Vehicle {
+public class VehicleEntity {
 
     private String patente;
 

@@ -1,6 +1,9 @@
 package autofix.ms_vehicle_repair.model;
 
-public class Repair {
+import lombok.Data;
+
+@Data
+public class RepairEntity {
 
     private String type;
     private Integer value;
