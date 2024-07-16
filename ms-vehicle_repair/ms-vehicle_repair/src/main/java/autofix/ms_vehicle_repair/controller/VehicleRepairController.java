@@ -1,6 +1,7 @@
 package autofix.ms_vehicle_repair.controller;
 
 import autofix.ms_vehicle_repair.entity.VehicleRepairEntity;
+
 import autofix.ms_vehicle_repair.service.VehicleRepairService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -36,4 +37,5 @@ public class VehicleRepairController {
         VehicleRepairEntity newReparation = vehicleRepairService.save(reparation);
         return ResponseEntity.ok(newReparation);
     }
+
 }

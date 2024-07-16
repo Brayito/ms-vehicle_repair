@@ -47,8 +47,5 @@ public class VehicleRepairEntity {
     @Column(name = "hora_retiro")
     String hora_retiro;
 
-
-
     private Integer vehicleId;
-    private Integer repairId;
 }
