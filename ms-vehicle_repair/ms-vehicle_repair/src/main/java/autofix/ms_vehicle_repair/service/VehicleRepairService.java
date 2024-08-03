@@ -6,6 +6,7 @@ import autofix.ms_vehicle_repair.models.VehicleModel;
 import autofix.ms_vehicle_repair.repository.VehicleRepairRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -45,129 +46,174 @@ public class VehicleRepairService {
         return vehicles;
     }
 
-    public List<RepairModel> getRepairsByPatente(String patente){
+    public List<RepairModel> getRepairs(){
+        List<RepairModel> repairs = restTemplate.getForObject("http://ms-repairs/repairs/", List.class);
+        System.out.println("Buscando reparaciones");
+        if (repairs == null) {
+            return new ArrayList<>();
+        }
+        return repairs;
+    }
+
+    public VehicleModel getVehicleByPatente(@PathVariable String patente) {
+        try {
+            VehicleModel vehicle = restTemplate.getForObject("http://ms-vehicle/vehicles/patente/" + patente, VehicleModel.class);
+            System.out.println("Buscando vehiculos");
+            return vehicle;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public List<RepairModel> getRepairsByPatente(@PathVariable String patente){
         try{
-            List<RepairModel> repairs = restTemplate.getForObject("http://ms-repairs/byVehicle/" + patente, List.class);
+            List<RepairModel> repairs = restTemplate.getForObject("http://ms-repairs/repairs/byVehicle/" + patente, List.class);
             return repairs;
         } catch (Exception e){
             e.printStackTrace();
             return null;
         }
-
     }
 
-//    public double valor_reparacion(String tipo_reparacion, String tipo_motor){
-//        int valor = 0;
+
+
+
+    public RepairModel crearReparacion(RepairModel repair){
+        System.out.println(repair.getValue());
+        return restTemplate.postForObject("http://ms-repairs/repairs/", repair, RepairModel.class);
+    }
+
+    public VehicleModel crearVehiculo(VehicleModel vehicle){
+        return restTemplate.postForObject("http://ms-vehicle/vehicles/", vehicle, VehicleModel.class);
+    }
+
+
+
+//    calcular_valor_reparacion(String tipo_reparacion, String tipo_motor){
 //
-//        if (tipo_reparacion == "Reparaciones del Sistema de Frenos") {
-//            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel")){
-//                valor = 120000;
-//            }
-//            if (tipo_motor == "Hibrido"){
-//                valor = 180000;
-//            }
-//            if (tipo_motor == "Electrico"){
-//                valor = 220000;
-//            }
-//        }
-//        if (tipo_reparacion == "Servicio del Sistema de Refrigeracion") {
-//            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel")){
-//                valor = 130000;
-//            }
-//            if (tipo_motor == "Hibrido"){
-//                valor = 190000;
-//            }
-//            if (tipo_motor == "Electrico"){
-//                valor = 230000;
-//            }
-//        }
-//        if (tipo_reparacion == "Reparaciones del Motor") {
-//            if (tipo_motor == "Gasolina"){
-//                valor = 350000;
-//            }
-//            if (tipo_motor == "Diesel"){
-//                valor = 450000;
-//            }
-//            if (tipo_motor == "Hibrido"){
-//                valor = 700000;
-//            }
-//            if (tipo_motor == "Electrico"){
-//                valor = 800000;
-//            }
-//        }
-//        if (tipo_reparacion == "Reparaciones de la Transmisión") {
-//            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel")){
-//                valor = 210000;
-//            }
-//            if ((tipo_motor == "Hibrido") || (tipo_motor == "Electrico")){
-//                valor = 300000;
-//            }
-//        }
-//        if (tipo_reparacion == "Reparacion del Sistema Electrico") {
-//            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel")){
-//                valor = 150000;
-//            }
-//            if (tipo_motor == "Hibrido"){
-//                valor = 200000;
-//            }
-//            if (tipo_motor == "Electrico"){
-//                valor = 250000;
-//            }
-//        }
-//        if (tipo_reparacion == "Reparaciones del Sistema de Escape") {
-//            if (tipo_motor == "Gasolina"){
-//                valor = 100000;
-//            }
-//            if (tipo_motor == "Diesel"){
-//                valor = 120000;
-//            }
-//            if (tipo_motor == "Hibrido"){
-//                valor = 450000;
-//            }
-//        }
-//        if (tipo_reparacion == "Reparacion de Neumaticos y Ruedas") {
-//            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel") || (tipo_motor == "Hibrido") || (tipo_motor == "Electrico")){
-//                valor = 100000;
-//            }
-//        }
-//        if (tipo_reparacion == "Reparaciones de la Suspension y la Direccion") {
-//            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel")){
-//                valor = 180000;
-//            }
-//            if (tipo_motor == "Hibrido"){
-//                valor = 210000;
-//            }
-//            if (tipo_motor == "Electrico"){
-//                valor = 250000;
-//            }
-//        }
-//        if (tipo_reparacion == "Reparacion del Sistema de Aire Acondicionado y Calefaccion") {
-//            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel")){
-//                valor = 150000;
-//            }
-//            if ((tipo_motor == "Hibrido") || (tipo_motor == "Electrico")){
-//                valor = 180000;
-//            }
-//        }
-//        if (tipo_reparacion == "Reparaciones del Sistema de Combustible") {
-//            if (tipo_motor == "Gasolina"){
-//                valor = 130000;
-//            }
-//            if (tipo_motor == "Diesel"){
-//                valor = 140000;
-//            }
-//            if (tipo_motor == "Hibrido"){
-//                valor = 220000;
-//            }
-//        }
-//        if (tipo_reparacion == "Reparacion y Reemplazo del Parabrisas y Cristales") {
-//            if (((tipo_motor == "Gasolina") || (tipo_motor == "Diesel") || (tipo_motor == "Hibrido") || (tipo_motor == "Electrico"))){
-//                valor = 80000;
-//            }
-//        }
-//
-//        return valor;
 //    }
+
+//    private RepairModel calcularReparacion(String patente, String tipo_reparacion){
+//        double valor = 0;
+//        valor = valor_reparacion(tipo_reparacion,getVehicleByPatente(patente).getTipo_motor());
+//        RepairModel repair = new RepairModel(tipo_reparacion, (int) valor, "01-08","13:00", patente);
+//        return repair;
+//    }
+
+    public Integer calcular_valor_reparacion(String tipo_reparacion, String tipo_motor){
+        int valor = 0;
+
+        if (tipo_reparacion == "Reparaciones del Sistema de Frenos") {
+            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel")){
+                valor = 120000;
+            }
+            if (tipo_motor == "Hibrido"){
+                valor = 180000;
+            }
+            if (tipo_motor == "Electrico"){
+                valor = 220000;
+            }
+        }
+        if (tipo_reparacion == "Servicio del Sistema de Refrigeracion") {
+            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel")){
+                valor = 130000;
+            }
+            if (tipo_motor == "Hibrido"){
+                valor = 190000;
+            }
+            if (tipo_motor == "Electrico"){
+                valor = 230000;
+            }
+        }
+        if (tipo_reparacion == "Reparaciones del Motor") {
+            if (tipo_motor == "Gasolina"){
+                valor = 350000;
+            }
+            if (tipo_motor == "Diesel"){
+                valor = 450000;
+            }
+            if (tipo_motor == "Hibrido"){
+                valor = 700000;
+            }
+            if (tipo_motor == "Electrico"){
+                valor = 800000;
+            }
+        }
+        if (tipo_reparacion == "Reparaciones de la Transmision") {
+            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel")){
+                valor = 210000;
+            }
+            if ((tipo_motor == "Hibrido") || (tipo_motor == "Electrico")){
+                valor = 300000;
+            }
+        }
+        if (tipo_reparacion == "Reparacion del Sistema Electrico") {
+            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel")){
+                valor = 150000;
+            }
+            if (tipo_motor == "Hibrido"){
+                valor = 200000;
+            }
+            if (tipo_motor == "Electrico"){
+                valor = 250000;
+            }
+        }
+        if (tipo_reparacion == "Reparaciones del Sistema de Escape") {
+            if (tipo_motor == "Gasolina"){
+                valor = 100000;
+            }
+            if (tipo_motor == "Diesel"){
+                valor = 120000;
+            }
+            if (tipo_motor == "Hibrido"){
+                valor = 450000;
+            }
+        }
+        if (tipo_reparacion == "Reparacion de Neumaticos y Ruedas") {
+            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel") || (tipo_motor == "Hibrido") || (tipo_motor == "Electrico")){
+                valor = 100000;
+            }
+        }
+        if (tipo_reparacion == "Reparaciones de la Suspension y la Direccion") {
+            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel")){
+                valor = 180000;
+            }
+            if (tipo_motor == "Hibrido"){
+                valor = 210000;
+            }
+            if (tipo_motor == "Electrico"){
+                valor = 250000;
+            }
+        }
+        if (tipo_reparacion == "Reparacion del Sistema de Aire Acondicionado y Calefaccion") {
+            if ((tipo_motor == "Gasolina") || (tipo_motor == "Diesel")){
+                valor = 150000;
+            }
+            if ((tipo_motor == "Hibrido") || (tipo_motor == "Electrico")){
+                valor = 180000;
+            }
+        }
+        if (tipo_reparacion == "Reparaciones del Sistema de Combustible") {
+            if (tipo_motor == "Gasolina"){
+                valor = 130000;
+            }
+            if (tipo_motor == "Diesel"){
+                valor = 140000;
+            }
+            if (tipo_motor == "Hibrido"){
+                valor = 220000;
+            }
+        }
+        if (tipo_reparacion == "Reparacion y Reemplazo del Parabrisas y Cristales") {
+            if (((tipo_motor == "Gasolina") || (tipo_motor == "Diesel") || (tipo_motor == "Hibrido") || (tipo_motor == "Electrico"))){
+                valor = 80000;
+            }
+        }
+
+        System.out.println(valor);
+        return valor;
+    }
 
     public double recargo_kilometraje(int kilometraje, String tipo_vehiculo){
         double recargo = 0;

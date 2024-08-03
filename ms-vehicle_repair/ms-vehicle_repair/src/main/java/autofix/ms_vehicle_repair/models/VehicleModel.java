@@ -15,4 +15,18 @@ public class VehicleModel {
     private Integer ano_fabricacion;
     private String tipo_motor;
     private Integer num_asientos;
+    private Integer kilometraje;
+
+    @Override
+    public String toString() {
+        return "VehicleModel{" +
+                "patente='" + patente + '\'' +
+                ", marca='" + marca + '\'' +
+                ", modelo='" + modelo + '\'' +
+                ", tipo_vehiculo='" + tipo_vehiculo + '\'' +
+                ", ano_fabricacion='" + ano_fabricacion + '\'' +
+                ", tipo_motor='" + tipo_motor + '\'' +
+                ", num_asientos='" + num_asientos + '\'' +
+                '}';
+    }
 }

@@ -13,4 +13,15 @@ public class RepairModel {
     private String fecha;
     private String hora;
     private String patente;
+
+    @Override
+    public String toString() {
+        return "RepairModel{" +
+                "type='" + type + '\'' +
+                ", fecha='" + fecha + '\'' +
+                ", hora='" + hora + '\'' +
+                ", value='" + value + '\'' +
+                ", patente='" + patente + '\'' +
+                '}';
+    }
 }
