@@ -16,6 +16,7 @@ public class VehicleModel {
     private String tipo_motor;
     private Integer num_asientos;
     private Integer kilometraje;
+    private String estado;
 
     @Override
     public String toString() {

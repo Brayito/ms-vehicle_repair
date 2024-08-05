@@ -3,8 +3,10 @@ package autofix.ms_vehicle_repair.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@NoArgsConstructor
 @AllArgsConstructor
 @Setter
 @Getter
@@ -51,5 +53,5 @@ public class VehicleRepairEntity {
     //@Column(name = "hora_retiro")
     String hora_retiro;
 
-    //private Integer vehicleId;
+
 }
