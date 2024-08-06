@@ -15,6 +15,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -133,7 +135,11 @@ public class VehicleRepairController {
             // Calcula el valor de la reparación antes de guardarla
             //LOGGER.info("Recibido VehicleModel: " + vehicle.toString());
             VehicleModel newVehicle = vehicleRepairService.crearVehiculo(vehicle);
-            VehicleRepairEntity historial = new VehicleRepairEntity(null,vehicle.getPatente(),"","",0,0,0,0,0,"","","","");
+
+            LocalDate fechaActual = LocalDate.now();
+            LocalTime horaActual = LocalTime.now();
+
+            VehicleRepairEntity historial = new VehicleRepairEntity(null,vehicle.getPatente(),fechaActual,horaActual,0,0,0,0,0,null,null,null,null);
             VehicleRepairEntity newHistorial = vehicleRepairService.save(historial);
             return ResponseEntity.ok(newVehicle);
         } catch (Exception e) {
@@ -147,8 +153,13 @@ public class VehicleRepairController {
     @PutMapping("/actualizar/{patente}")
     public ResponseEntity<Void> actualizarEstado(@PathVariable("patente") String patente, @RequestBody VehicleModel vehicle) {
         System.out.println("Actualizar estado VehicleRepairController");
-        vehicleRepairService.actualizarEstado(patente, vehicle.getEstado());
-        return ResponseEntity.ok().build();
+        try {
+            vehicleRepairService.actualizarEstado(patente, vehicle.getEstado());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @PutMapping("/historial")
@@ -162,13 +173,21 @@ public class VehicleRepairController {
                 logger.info("Procesando vehículo: patente={}, estado={}", patente, estado);
 
                 if (Objects.equals(estado, "Retirado")) {
-                    Integer valor_reparaciones = 0;
+                    int valor_reparaciones = 0;
                     List<RepairModel> repairs = vehicleRepairService.getRepairsByPatente(patente);
+                    int cantidad_reparaciones = 0;
                     for (RepairModel repair : repairs) {
                         valor_reparaciones += repair.getValue();
+                        cantidad_reparaciones = cantidad_reparaciones + 1;
+                        System.out.println("Conteo reparaciones:");
+                        System.out.println(cantidad_reparaciones);
                     }
                     VehicleRepairEntity historial = vehicleRepairService.getVehicleRepairByPatente(patente);
                     historial.setMonto_reparaciones(valor_reparaciones);
+                    historial.setMonto_recargos(vehicleRepairService.calcular_valor_recargos(patente));
+                    historial.setMonto_descuentos(vehicleRepairService.calcular_valor_descuentos(patente,cantidad_reparaciones));
+                    historial.setMonto_iva(vehicleRepairService.calcular_valor_iva(patente));
+                    historial.setMonto_total(vehicleRepairService.calcular_monto_total(patente));
                     vehicleRepairService.actualizarHistorial(historial);
                     logger.info("Actualizado historial para patente={}: monto_reparaciones={}", patente, valor_reparaciones);
                 }

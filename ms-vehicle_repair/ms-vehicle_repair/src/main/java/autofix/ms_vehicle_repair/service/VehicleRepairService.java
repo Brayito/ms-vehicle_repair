@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -110,10 +112,24 @@ public class VehicleRepairService {
 
 
     public void actualizarEstado(String patente, String nuevoEstado) {
-        VehicleModel vehicle = new VehicleModel();
-        System.out.println("Entrando a actualizar estado VehicleRepairService");
-        vehicle.setEstado(nuevoEstado);
-        restTemplate.put("http://ms-vehicle/vehicles/actualizarEstado/" + patente, vehicle);
+        VehicleModel vehicle = getVehicleByPatente(patente);
+        if (vehicle != null) {
+            vehicle.setEstado(nuevoEstado);
+            restTemplate.put("http://ms-vehicle/vehicles/actualizarEstado/" + patente, vehicle);
+
+            VehicleRepairEntity historial = getVehicleRepairByPatente(patente);
+            if (historial != null) {
+                if ("Listo para retirar".equals(nuevoEstado)) {
+                    historial.setFecha_salida(LocalDate.now());
+                    historial.setHora_salida(LocalTime.now());
+                } else if ("Retirado".equals(nuevoEstado)) {
+                    historial.setFecha_retiro(LocalDate.now());
+                    historial.setHora_retiro(LocalTime.now());
+                }
+
+                vehicleRepairRepository.save(historial);
+            }
+        }
     }
 
     public VehicleRepairEntity actualizarHistorial(VehicleRepairEntity newHistorial){
@@ -122,6 +138,8 @@ public class VehicleRepairService {
             return null;
         }
         historial.setMonto_reparaciones(newHistorial.getMonto_reparaciones());
+        historial.setMonto_recargos(newHistorial.getMonto_recargos());
+        historial.setMonto_descuentos(newHistorial.getMonto_descuentos());
         return vehicleRepairRepository.save(historial);
     }
 
@@ -254,6 +272,120 @@ public class VehicleRepairService {
         return valor;
     }
 
+
+    public Integer calcular_monto_total(String patente){
+        int monto_total = 0;
+
+        VehicleRepairEntity historial = getVehicleRepairByPatente(patente);
+
+        monto_total = historial.getMonto_reparaciones() - historial.getMonto_descuentos() + historial.getMonto_recargos() + historial.getMonto_iva();
+
+        return monto_total;
+    }
+
+    public Integer calcular_valor_iva(String patente){
+        int iva = 0;
+
+        VehicleRepairEntity historial = getVehicleRepairByPatente(patente);
+
+        iva = (int) ((historial.getMonto_reparaciones() - historial.getMonto_descuentos() + historial.getMonto_recargos()) * 0.19);
+
+        return iva;
+    }
+
+    public Integer calcular_valor_descuentos(String patente, Integer num_reparaciones){
+        int descuento = 0;
+
+        VehicleRepairEntity historial = getVehicleRepairByPatente(patente);
+        VehicleModel vehicle = getVehicleByPatente(patente);
+
+        //Kilometraje
+        descuento = (int) (descuento + (historial.getMonto_reparaciones()) * descuento_num_reparaciones(num_reparaciones, vehicle.getTipo_vehiculo()));
+
+        //Antigüedad
+        descuento = (int) (descuento + (historial.getMonto_reparaciones()) * recargo_antiguedad(vehicle.getAno_fabricacion(), vehicle.getTipo_vehiculo()));
+        //
+        return descuento;
+    }
+
+
+    public double descuento_num_reparaciones(Integer num_reparaciones, String tipo_motor){
+        double descuento = 0;
+
+        if (num_reparaciones >= 1 && num_reparaciones <= 2){
+            if (Objects.equals(tipo_motor, "Gasolina")){
+                descuento = 0.05;
+            }
+            if (Objects.equals(tipo_motor, "Diesel")){
+                descuento = 0.08;
+            }
+            if (Objects.equals(tipo_motor, "Hibrido")){
+                descuento = 0.10;
+            }
+            if (Objects.equals(tipo_motor, "Electrico")){
+                descuento = 0.08;
+            }
+        }
+        if (num_reparaciones >= 3 && num_reparaciones <= 5){
+            if (Objects.equals(tipo_motor, "Gasolina")){
+                descuento = 0.10;
+            }
+            if (Objects.equals(tipo_motor, "Diesel")){
+                descuento = 0.12;
+            }
+            if (Objects.equals(tipo_motor, "Hibrido")){
+                descuento = 0.15;
+            }
+            if (Objects.equals(tipo_motor, "Electrico")){
+                descuento = 0.13;
+            }
+        }
+        if (num_reparaciones >= 6 && num_reparaciones <= 9){
+            if (Objects.equals(tipo_motor, "Gasolina")){
+                descuento = 0.15;
+            }
+            if (Objects.equals(tipo_motor, "Diesel")){
+                descuento = 0.17;
+            }
+            if (Objects.equals(tipo_motor, "Hibrido")){
+                descuento = 0.20;
+            }
+            if (Objects.equals(tipo_motor, "Electrico")){
+                descuento = 0.18;
+            }
+        }
+        if (num_reparaciones >= 10){
+            if (Objects.equals(tipo_motor, "Gasolina")){
+                descuento = 0.20;
+            }
+            if (Objects.equals(tipo_motor, "Diesel")){
+                descuento = 0.22;
+            }
+            if (Objects.equals(tipo_motor, "Hibrido")){
+                descuento = 0.25;
+            }
+            if (Objects.equals(tipo_motor, "Electrico")){
+                descuento = 0.23;
+            }
+        }
+        return descuento;
+    }
+
+    public Integer calcular_valor_recargos(String patente){
+        int recargo = 0;
+
+        VehicleRepairEntity historial = getVehicleRepairByPatente(patente);
+        VehicleModel vehicle = getVehicleByPatente(patente);
+
+        //Kilometraje
+        recargo = (int) (recargo + (historial.getMonto_reparaciones() * recargo_kilometraje(vehicle.getKilometraje(),vehicle.getTipo_vehiculo())));
+
+        //Antigüedad
+        recargo = (int) (recargo + (historial.getMonto_reparaciones()) * recargo_antiguedad(vehicle.getAno_fabricacion(), vehicle.getTipo_vehiculo()));
+        //
+        return recargo;
+    }
+
     public double recargo_kilometraje(int kilometraje, String tipo_vehiculo){
         double recargo = 0;
         if (kilometraje >= 5001 && kilometraje <= 12000){
@@ -285,8 +417,10 @@ public class VehicleRepairService {
         return recargo;
     }
 
-    public double recargo_antiguedad(int antiguedad, String tipo_vehiculo){
+    public double recargo_antiguedad(int ano_fabricacion, String tipo_vehiculo){
         double recargo = 0;
+
+        int antiguedad = 2024 - ano_fabricacion;
 
         if (antiguedad >= 6 && antiguedad <= 10){
             if((Objects.equals(tipo_vehiculo, "Sedan")) || (Objects.equals(tipo_vehiculo, "Hatchback"))) {
